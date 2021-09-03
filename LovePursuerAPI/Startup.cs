@@ -2,6 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LovePursuerAPI.EF;
+using LovePursuerAPI.Helpers;
+using LovePursuerAPI.JWT;
+using LovePursuerAPI.Models;
+using LovePursuerAPI.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -25,8 +30,16 @@ namespace LovePursuerAPI
         
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddDbContext<DataContext>();
+            
+            services.AddControllers()
+                .AddJsonOptions(x => x.JsonSerializerOptions.IgnoreNullValues = true);
+            services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
+            
+            services.AddScoped<IJwtUtils, JwtUtils>();
+            services.AddScoped<IUserService, UserService>();
             services.AddSwaggerGen(c =>
+            
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "LovePursuerAPI", Version = "v1"});
             });
@@ -44,6 +57,9 @@ namespace LovePursuerAPI
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            
+            app.UseMiddleware<ErrorHandlerMiddleware>();
+            app.UseMiddleware<JwtMiddleware>();
 
             app.UseAuthorization();
 
