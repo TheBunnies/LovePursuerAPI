@@ -19,6 +19,12 @@ namespace LovePursuerAPI.Controllers
         }
 
         [AllowAnonymous]
+        [HttpPost("register")]
+        public IActionResult Register(User user)
+        {
+            return Ok(user);
+        }
+        [AllowAnonymous]
         [HttpPost("authenticate")]
         public IActionResult Authenticate(AuthenticateRequest model)
         {

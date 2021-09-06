@@ -17,7 +17,7 @@ namespace LovePursuerAPI.EF
         
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseNpgsql("Subject to change");
+            options.UseNpgsql("Host=localhost;Port=5432;Database=LovePursuerDB;Username=postgres;Password=postgres");
         }
     }
 }
