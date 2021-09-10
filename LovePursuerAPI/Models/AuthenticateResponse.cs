@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using LovePursuerAPI.EF.Models;
 
 namespace LovePursuerAPI.Models
 {

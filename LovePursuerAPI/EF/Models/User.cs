@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using LovePursuerAPI.Models;
 
-namespace LovePursuerAPI.Models
+namespace LovePursuerAPI.EF.Models
 {
     public class User
     {

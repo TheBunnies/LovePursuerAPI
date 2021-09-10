@@ -2,13 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace LovePursuerAPI.Models
 {
-    public class AuthenticateRequest
+    public class RegisterRequest
     {
-        public AuthenticateRequest(string username, string password)
-        {
-            Username = username;
-            Password = password;
-        }
+        [Required]
+        public string FirstName { get; set; }
+        [Required]
+        public string LastName { get; set; }
         [Required]
         public string Username { get; set; }
         [Required]

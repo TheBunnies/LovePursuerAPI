@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using LovePursuerAPI.EF.Models;
 using LovePursuerAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

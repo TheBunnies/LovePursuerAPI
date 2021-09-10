@@ -1,3 +1,4 @@
+using LovePursuerAPI.EF.Models;
 using LovePursuerAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

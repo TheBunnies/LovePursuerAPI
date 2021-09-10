@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using LovePursuerAPI.EF;
+using LovePursuerAPI.EF.Models;
 using LovePursuerAPI.Exceptions;
 using LovePursuerAPI.JWT;
 using LovePursuerAPI.Models;
@@ -12,7 +14,9 @@ namespace LovePursuerAPI.Services
 {
     public interface IUserService
     {
-        AuthenticateResponse Authenticate(AuthenticateRequest model, string ipAddress);
+        Task<RegisterResponse> RegisterAsync(RegisterRequest model, string ipAddress);
+        RegisterResponse Register(RegisterRequest model, string ipAddress);
+        Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress);
         AuthenticateResponse RefreshToken(string token, string ipAddress);
         void RevokeToken(string token, string ipAddress);
         IEnumerable<User> GetAll();
@@ -35,7 +39,26 @@ namespace LovePursuerAPI.Services
             _appSettings = appSettings.Value;
         }
 
-        public AuthenticateResponse Authenticate(AuthenticateRequest model, string ipAddress)
+        public async Task<RegisterResponse> RegisterAsync(RegisterRequest model, string ipAddress)
+        {
+            var user = new User
+            {
+                Username = model.Username,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                PasswordHash = BCryptNet.HashPassword(model.Password)
+            };
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+            var response = new RegisterResponse(user.Username, user.FirstName, user.LastName);
+            return response;
+        }
+
+        public RegisterResponse Register(RegisterRequest model, string ipAddress)
+        {
+            return RegisterAsync(model, ipAddress).Result;
+        }
+        public async Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress)
         {
             var user = _context.Users.SingleOrDefault(x => x.Username == model.Username);
 
@@ -53,7 +76,7 @@ namespace LovePursuerAPI.Services
 
             // save changes to db
             _context.Update(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return new AuthenticateResponse(user, jwtToken, refreshToken.Token);
         }
@@ -149,7 +172,7 @@ namespace LovePursuerAPI.Services
             // recursively traverse the refresh token chain and ensure all descendants are revoked
             if(!string.IsNullOrEmpty(refreshToken.ReplacedByToken))
             {
-                var childToken = user.RefreshTokens.FirstOrDefault(x => x.Token == refreshToken.ReplacedByToken);
+                var childToken = user.RefreshTokens.First(x => x.Token == refreshToken.ReplacedByToken);
                 if (childToken.IsActive)
                     RevokeRefreshToken(childToken, ipAddress, reason);
                 else

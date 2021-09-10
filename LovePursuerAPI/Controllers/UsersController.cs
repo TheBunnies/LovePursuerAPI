@@ -1,5 +1,7 @@
 using System;
+using System.Threading.Tasks;
 using LovePursuerAPI.Attributes;
+using LovePursuerAPI.Exceptions;
 using LovePursuerAPI.Models;
 using LovePursuerAPI.Services;
 using Microsoft.AspNetCore.Http;
@@ -20,16 +22,36 @@ namespace LovePursuerAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost("register")]
-        public IActionResult Register(User user)
+        public async Task<IActionResult> RegisterAsync(RegisterRequest model)
         {
-            return Ok(user);
+            RegisterResponse response;
+            try
+            {
+                response = await _userService.RegisterAsync(model, GetIpAddress());
+            }
+            catch (AppException e)
+            {
+                return BadRequest(e.Message);
+            }
+
+            return Ok(response);
+
         }
         [AllowAnonymous]
         [HttpPost("authenticate")]
-        public IActionResult Authenticate(AuthenticateRequest model)
+        public async Task<IActionResult> AuthenticateAsync(AuthenticateRequest model)
         {
-            var response = _userService.Authenticate(model, GetIpAddress());
-            SetTokenCookie(response.RefreshToken);
+            AuthenticateResponse response;
+            try
+            {
+                response = await _userService.AuthenticateAsync(model, GetIpAddress());
+                SetTokenCookie(response.RefreshToken);
+            }
+            catch (AppException e)
+            {
+                return BadRequest(e.Message);
+            }
+            
             return Ok(response);
         }
 
