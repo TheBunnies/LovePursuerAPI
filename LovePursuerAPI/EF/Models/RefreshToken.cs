@@ -1,11 +1,13 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
-namespace LovePursuerAPI.Models
+namespace LovePursuerAPI.EF.Models
 {
     [Owned]
+    [Table("RefreshTokens")]
     public class RefreshToken
     {
         [Key]
