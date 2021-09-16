@@ -8,7 +8,10 @@ namespace LovePursuerAPI.Models
         public int Id { get; }
         public string FirstName { get; }
         public string LastName { get;  }
-        public string Username { get;  }
+
+        public string Email { get; }
+        public string Sex { get;  }
+        public Role Role { get; }
         public string JwtToken { get; }
         
         [JsonIgnore]
@@ -19,7 +22,9 @@ namespace LovePursuerAPI.Models
             Id = user.Id;
             FirstName = user.FirstName;
             LastName = user.LastName;
-            Username = user.Username;
+            Email = user.Email;
+            Sex = user.Sex;
+            Role = user.Role;
             JwtToken = jwtToken;
             RefreshToken = refreshToken;
         }

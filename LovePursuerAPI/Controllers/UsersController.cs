@@ -1,6 +1,8 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using LovePursuerAPI.Attributes;
+using LovePursuerAPI.EF.Models;
 using LovePursuerAPI.Exceptions;
 using LovePursuerAPI.Models;
 using LovePursuerAPI.Services;
@@ -22,13 +24,13 @@ namespace LovePursuerAPI.Controllers
         
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterAsync(RegisterRequest model)
+        public async Task<IActionResult> RegisterAsync(RegisterRequest model, CancellationToken cancellationToken)
         {
             AuthenticateResponse response;
             try
             {
-                await _userService.RegisterAsync(model, GetIpAddress());
-                response = await _userService.AuthenticateAsync(new AuthenticateRequest(model.Username, model.Password), GetIpAddress());
+                await _userService.RegisterAsync(model, cancellationToken);
+                response = await _userService.AuthenticateAsync(new AuthenticateRequest(model.Email, model.Password), GetIpAddress(), cancellationToken);
                 SetTokenCookie(response.RefreshToken);
             }
             catch (AppException e)
@@ -42,12 +44,12 @@ namespace LovePursuerAPI.Controllers
         
         [AllowAnonymous]
         [HttpPost("authenticate")]
-        public async Task<IActionResult> AuthenticateAsync(AuthenticateRequest model)
+        public async Task<IActionResult> AuthenticateAsync(AuthenticateRequest model, CancellationToken cancellationToken)
         {
             AuthenticateResponse response;
             try
             {
-                response = await _userService.AuthenticateAsync(model, GetIpAddress());
+                response = await _userService.AuthenticateAsync(model, GetIpAddress(), cancellationToken);
                 SetTokenCookie(response.RefreshToken);
             }
             catch (AppException e)
@@ -80,15 +82,22 @@ namespace LovePursuerAPI.Controllers
         [Authorize]
         [HttpPost("revoke-token")]
         // Revoke refresh token
-        public IActionResult RevokeToken(RevokeTokenRequest model)
+        public IActionResult RevokeRefreshToken(RevokeTokenRequest model)
         {
             var token = model.Token ?? Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(token))
                 return BadRequest(new { message = "Token is required" });
 
-            _userService.RevokeToken(token, GetIpAddress());
+            _userService.RevokeRefreshToken(token, GetIpAddress());
             return Ok(new { message = "Token revoked" });
+        }
+
+        [Authorize]
+        [HttpGet("whoami")]
+        public IActionResult GetMyself()
+        {
+            return Ok((User)HttpContext?.Items["User"]);
         }
         
 

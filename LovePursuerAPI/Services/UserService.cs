@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LovePursuerAPI.EF;
 using LovePursuerAPI.EF.Models;
@@ -14,13 +15,13 @@ namespace LovePursuerAPI.Services
 {
     public interface IUserService
     {
-        Task<RegisterResponse> RegisterAsync(RegisterRequest model, string ipAddress);
-        RegisterResponse Register(RegisterRequest model, string ipAddress);
-        Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress);
+        Task<RegisterResponse> RegisterAsync(RegisterRequest model, CancellationToken cancellationToken = default);
+        Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress, CancellationToken cancellationToken = default);
         AuthenticateResponse RefreshToken(string token, string ipAddress);
-        void RevokeToken(string token, string ipAddress);
+        void RevokeRefreshToken(string token, string ipAddress);
         IEnumerable<User> GetAll();
         User GetById(int id);
+        User GetByEmail(string email);
     }
     
     public class UserService : IUserService
@@ -39,28 +40,33 @@ namespace LovePursuerAPI.Services
             _appSettings = appSettings.Value;
         }
 
-        public async Task<RegisterResponse> RegisterAsync(RegisterRequest model, string ipAddress)
+        public async Task<RegisterResponse> RegisterAsync(RegisterRequest model, CancellationToken cancellationToken = default)
         {
+            try
+            {
+                GetByEmail(model.Email);
+                throw new AppException("The user is already registered");
+            }
+            catch(KeyNotFoundException) {}
+            
             var user = new User
             {
-                Username = model.Username,
+                Email = model.Email,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
+                Sex = model.Sex,
+                Role = Role.User,
                 PasswordHash = BCryptNet.HashPassword(model.Password)
             };
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-            var response = new RegisterResponse(user.Username, user.FirstName, user.LastName);
+            await _context.Users.AddAsync(user, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            var response = new RegisterResponse(user.Email, user.FirstName, user.LastName, user.Sex);
             return response;
         }
-
-        public RegisterResponse Register(RegisterRequest model, string ipAddress)
+        
+        public async Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress, CancellationToken cancellationToken = default)
         {
-            return RegisterAsync(model, ipAddress).Result;
-        }
-        public async Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress)
-        {
-            var user = _context.Users.SingleOrDefault(x => x.Username == model.Username);
+            var user = _context.Users.SingleOrDefault(x => x.Email == model.Email);
 
             // validate
             if (user == null || !BCryptNet.Verify(model.Password, user.PasswordHash))
@@ -76,7 +82,7 @@ namespace LovePursuerAPI.Services
 
             // save changes to db
             _context.Update(user);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return new AuthenticateResponse(user, jwtToken, refreshToken.Token);
         }
@@ -90,8 +96,8 @@ namespace LovePursuerAPI.Services
             {
                 // revoke all descendant tokens in case this token has been compromised
                 RevokeDescendantRefreshTokens(refreshToken, user, ipAddress, $"Attempted reuse of revoked ancestor token: {token}");
-                _context.Update(user);
-                _context.SaveChanges();
+                _context.Update(user); 
+                _context.SaveChangesAsync();
             }
 
             if (!refreshToken.IsActive)
@@ -106,7 +112,7 @@ namespace LovePursuerAPI.Services
 
             // save changes to db
             _context.Update(user);
-            _context.SaveChanges();
+            _context.SaveChangesAsync();
 
             // generate new jwt
             var jwtToken = _jwtUtils.GenerateJwtToken(user);
@@ -114,7 +120,7 @@ namespace LovePursuerAPI.Services
             return new AuthenticateResponse(user, jwtToken, newRefreshToken.Token);
         }
 
-        public void RevokeToken(string token, string ipAddress)
+        public void RevokeRefreshToken(string token, string ipAddress)
         {
             var user = GetUserByRefreshToken(token);
             var refreshToken = user.RefreshTokens.Single(x => x.Token == token);
@@ -125,7 +131,7 @@ namespace LovePursuerAPI.Services
             // revoke token and save
             RevokeRefreshToken(refreshToken, ipAddress, "Revoked without replacement");
             _context.Update(user);
-            _context.SaveChanges();
+            _context.SaveChangesAsync();
         }
 
         public IEnumerable<User> GetAll()
@@ -136,6 +142,13 @@ namespace LovePursuerAPI.Services
         public User GetById(int id)
         {
             var user = _context.Users.Find(id);
+            if (user == null) throw new KeyNotFoundException("User not found");
+            return user;
+        }
+
+        public User GetByEmail(string email)
+        {
+            var user = _context.Users.FirstOrDefault(x => x.Email == email);
             if (user == null) throw new KeyNotFoundException("User not found");
             return user;
         }

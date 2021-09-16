@@ -4,14 +4,16 @@ namespace LovePursuerAPI.Models
 {
     public class AuthenticateRequest
     {
-        public AuthenticateRequest(string username, string password)
+        [Required]
+        public string Email { get; }
+        
+        [Required]
+        public string Password { get; }
+        
+        public AuthenticateRequest(string email, string password)
         {
-            Username = username;
+            Email = email;
             Password = password;
         }
-        [Required]
-        public string Username { get; set; }
-        [Required]
-        public string Password { get; set; }
     }
 }
