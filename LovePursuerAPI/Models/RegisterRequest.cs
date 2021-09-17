@@ -1,19 +1,21 @@
 using System.ComponentModel.DataAnnotations;
+using LovePursuerAPI.Validation;
 
 namespace LovePursuerAPI.Models
 {
     public class RegisterRequest
     {
         [Required]
-        [StringLength(12)]
+        [StringLength(50)]
         public string FirstName { get; set; }
         [Required]
-        [StringLength(12)]
+        [StringLength(50)]
         public string LastName { get; set; }
         [Required]
         [EmailAddress]
         public string Email { get; set; }
         [Required]
+        [Sex]
         [StringLength(12)]
         public string Sex { get; set; }
         [Required]

@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using LovePursuerAPI.Attributes;
 using LovePursuerAPI.EF.Models;
-using LovePursuerAPI.Exceptions;
 using LovePursuerAPI.Models;
 using LovePursuerAPI.Services;
 using Microsoft.AspNetCore.Http;
@@ -26,36 +25,19 @@ namespace LovePursuerAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> RegisterAsync(RegisterRequest model, CancellationToken cancellationToken)
         {
-            AuthenticateResponse response;
-            try
-            {
-                await _userService.RegisterAsync(model, cancellationToken);
-                response = await _userService.AuthenticateAsync(new AuthenticateRequest(model.Email, model.Password), GetIpAddress(), cancellationToken);
-                SetTokenCookie(response.RefreshToken);
-            }
-            catch (AppException e)
-            {
-                return BadRequest(e.Message);
-            }
+            await _userService.RegisterAsync(model, cancellationToken);
+            var response = await _userService.AuthenticateAsync(new AuthenticateRequest(model.Email, model.Password), GetIpAddress(), cancellationToken);
+            SetTokenCookie(response.RefreshToken);
 
             return Ok(response);
-
         }
         
         [AllowAnonymous]
         [HttpPost("authenticate")]
         public async Task<IActionResult> AuthenticateAsync(AuthenticateRequest model, CancellationToken cancellationToken)
         {
-            AuthenticateResponse response;
-            try
-            {
-                response = await _userService.AuthenticateAsync(model, GetIpAddress(), cancellationToken);
-                SetTokenCookie(response.RefreshToken);
-            }
-            catch (AppException e)
-            {
-                return BadRequest(e.Message);
-            }
+            var response = await _userService.AuthenticateAsync(model, GetIpAddress(), cancellationToken);
+            SetTokenCookie(response.RefreshToken);
             
             return Ok(response);
         }
@@ -65,18 +47,10 @@ namespace LovePursuerAPI.Controllers
         // Refresh refresh token and JWT
         public IActionResult RefreshToken()
         {
-            try
-            {
-                var refreshToken = Request.Cookies["refreshToken"];
-                var response = _userService.RefreshToken(refreshToken, GetIpAddress());
-                SetTokenCookie(response.RefreshToken);
-                return Ok(response);
-            }
-            catch (AppException e)
-            {
-                return BadRequest(e.Message);
-            }
-            
+            var refreshToken = Request.Cookies["refreshToken"];
+            var response = _userService.RefreshToken(refreshToken, GetIpAddress());
+            SetTokenCookie(response.RefreshToken);
+            return Ok(response);
         }
         
         [Authorize]

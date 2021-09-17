@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using LovePursuerAPI.Exceptions;
@@ -30,21 +31,18 @@ namespace LovePursuerAPI.Helpers
 
                 switch (error)
                 {
-                    case AppException e:
-                        // custom application error
+                    case AppException:
                         response.StatusCode = (int) HttpStatusCode.BadRequest;
                         break;
-                    case KeyNotFoundException e:
-                        // not found error
+                    case KeyNotFoundException:
                         response.StatusCode = (int) HttpStatusCode.NotFound;
                         break;
                     default:
-                        // unhandled error
                         response.StatusCode = (int) HttpStatusCode.InternalServerError;
                         break;
                 }
 
-                var result = JsonSerializer.Serialize(new {message = error?.Message});
+                var result = JsonSerializer.Serialize(new {message = error.Message});
                 await response.WriteAsync(result);
             }
         }
