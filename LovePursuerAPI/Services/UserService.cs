@@ -19,8 +19,8 @@ namespace LovePursuerAPI.Services
     {
         Task<RegisterResponse> RegisterAsync(RegisterRequest model, CancellationToken cancellationToken = default);
         Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress, CancellationToken cancellationToken = default);
-        AuthenticateResponse RefreshToken(string token, string ipAddress);
-        void RevokeRefreshToken(string token, string ipAddress);
+        Task<AuthenticateResponse> RefreshTokenAsync(string token, string ipAddress, CancellationToken cancellationToken = default);
+        Task RevokeRefreshTokenAsync(string token, string ipAddress, CancellationToken cancellationToken = default);
         IEnumerable<User> GetAll();
         IEnumerable<User> GetUsers(Func<User, bool> predicate);
         User GetById(int id);
@@ -92,7 +92,7 @@ namespace LovePursuerAPI.Services
             return new AuthenticateResponse(user, jwtToken, refreshToken.Token);
         }
 
-        public AuthenticateResponse RefreshToken(string token, string ipAddress)
+        public async Task<AuthenticateResponse> RefreshTokenAsync(string token, string ipAddress, CancellationToken cancellationToken = default)
         {
             var user = GetUserByRefreshToken(token);
             var refreshToken = user.RefreshTokens.Single(x => x.Token == token);
@@ -102,7 +102,7 @@ namespace LovePursuerAPI.Services
                 // revoke all descendant tokens in case this token has been compromised
                 RevokeDescendantRefreshTokens(refreshToken, user, ipAddress, $"Attempted reuse of revoked ancestor token: {token}");
                 _context.Update(user); 
-                _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
 
             if (!refreshToken.IsActive)
@@ -117,7 +117,7 @@ namespace LovePursuerAPI.Services
 
             // save changes to db
             _context.Update(user);
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             // generate new jwt
             var jwtToken = _jwtUtils.GenerateJwtToken(user);
@@ -125,7 +125,7 @@ namespace LovePursuerAPI.Services
             return new AuthenticateResponse(user, jwtToken, newRefreshToken.Token);
         }
 
-        public void RevokeRefreshToken(string token, string ipAddress)
+        public async Task RevokeRefreshTokenAsync(string token, string ipAddress, CancellationToken cancellationToken = default)
         {
             var user = GetUserByRefreshToken(token);
             var refreshToken = user.RefreshTokens.Single(x => x.Token == token);
@@ -136,7 +136,7 @@ namespace LovePursuerAPI.Services
             // revoke token and save
             RevokeRefreshToken(refreshToken, ipAddress, "Revoked without replacement");
             _context.Update(user);
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public IEnumerable<User> GetAll()

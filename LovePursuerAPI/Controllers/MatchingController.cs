@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using LovePursuerAPI.Attributes;
 using LovePursuerAPI.EF.Models;
@@ -25,9 +24,9 @@ namespace LovePursuerAPI.Controllers
 
             var matches = _userService.GetUsers(x =>
                     x.Sex != currentUser.Sex && x.Sexuality == currentUser.Sexuality &&
-                    x.Age <= 2 * currentUser.Age - 14)
+                    x.Age <= 2 * currentUser.Age - 14 && x.Age >= currentUser.Age / 2 + 7)
                 .Select(x => new MatchResponse(x.FirstName, x.LastName, x.Sex, x.Sexuality, x.Age, x.BirthDay));
-            if (matches.Count() == 0)
+            if (!matches.Any())
                     return NotFound("No users matching your profile");
             
             return Ok(matches);

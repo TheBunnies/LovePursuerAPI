@@ -46,10 +46,10 @@ namespace LovePursuerAPI.Controllers
         [AllowAnonymous]
         [HttpPost("refresh-token")]
         // Refresh refresh token and JWT
-        public IActionResult RefreshToken()
+        public async Task<IActionResult> RefreshTokenAsync(CancellationToken cancellationToken)
         {
             var refreshToken = Request.Cookies["refreshToken"];
-            var response = _userService.RefreshToken(refreshToken, GetIpAddress());
+            var response = await _userService.RefreshTokenAsync(refreshToken, GetIpAddress(), cancellationToken);
             SetTokenCookie(response.RefreshToken);
             return Ok(response);
         }
@@ -57,14 +57,14 @@ namespace LovePursuerAPI.Controllers
         [Authorize]
         [HttpPost("revoke-token")]
         // Revoke refresh token
-        public IActionResult RevokeRefreshToken(RevokeTokenRequest model)
+        public async Task<IActionResult> RevokeRefreshTokenAsync(RevokeTokenRequest model, CancellationToken cancellationToken)
         {
             var token = model.Token ?? Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(token))
                 return BadRequest(new { message = "Token is required" });
 
-            _userService.RevokeRefreshToken(token, GetIpAddress());
+            await _userService.RevokeRefreshTokenAsync(token, GetIpAddress(), cancellationToken);
             return Ok(new { message = "Token revoked" });
         }
 
