@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using LovePursuerAPI.Validation;
 
 namespace LovePursuerAPI.EF.Models
 {
@@ -15,6 +18,23 @@ namespace LovePursuerAPI.EF.Models
         
         [StringLength(7)]
         public string Sex { get; set; }
+        
+        [StringLength(69)]
+        public string Sexuality {get; set; }
+        
+        public DateTime BirthDay { get; set; }
+
+        [NotMapped]
+        public int Age
+        {
+            get
+            {
+                var age = DateTime.Today.Year - BirthDay.Year;
+                if (BirthDay.Date > DateTime.Today.AddYears(-age)) age--;
+                return age;
+            }
+            
+        }
         
         public Role Role { get; set; }
 

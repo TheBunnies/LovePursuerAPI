@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LovePursuerAPI.Attributes;
 using LovePursuerAPI.EF.Models;
 using LovePursuerAPI.Models;
+using LovePursuerAPI.Models.Requests;
 using LovePursuerAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

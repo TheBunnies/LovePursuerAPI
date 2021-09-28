@@ -1,4 +1,4 @@
-namespace LovePursuerAPI.Models
+namespace LovePursuerAPI.Models.Requests
 {
     public class RevokeTokenRequest
     {

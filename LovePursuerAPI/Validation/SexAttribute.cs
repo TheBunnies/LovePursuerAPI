@@ -8,7 +8,7 @@ namespace LovePursuerAPI.Validation
         protected override ValidationResult IsValid(object value, ValidationContext context)
         {
             if (value is not string str)
-                throw new ArgumentException("Targeted type should be a string");
+                return new ValidationResult("Sex is not a string or empty");
 
             switch (str)
             {

@@ -8,6 +8,8 @@ using LovePursuerAPI.EF.Models;
 using LovePursuerAPI.Exceptions;
 using LovePursuerAPI.JWT;
 using LovePursuerAPI.Models;
+using LovePursuerAPI.Models.Requests;
+using LovePursuerAPI.Models.Responses;
 using Microsoft.Extensions.Options;
 using BCryptNet = BCrypt.Net.BCrypt;
 
@@ -20,6 +22,7 @@ namespace LovePursuerAPI.Services
         AuthenticateResponse RefreshToken(string token, string ipAddress);
         void RevokeRefreshToken(string token, string ipAddress);
         IEnumerable<User> GetAll();
+        IEnumerable<User> GetUsers(Func<User, bool> predicate);
         User GetById(int id);
         User GetByEmail(string email);
     }
@@ -55,12 +58,14 @@ namespace LovePursuerAPI.Services
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 Sex = model.Sex,
+                Sexuality = model.Sexuality,
+                BirthDay = model.BirthDay,
                 Role = Role.User,
                 PasswordHash = BCryptNet.HashPassword(model.Password)
             };
             await _context.Users.AddAsync(user, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
-            var response = new RegisterResponse(user.Email, user.FirstName, user.LastName, user.Sex);
+            var response = new RegisterResponse(user.Email, user.FirstName, user.LastName, user.Sex, user.Sexuality, user.BirthDay);
             return response;
         }
         
@@ -137,6 +142,11 @@ namespace LovePursuerAPI.Services
         public IEnumerable<User> GetAll()
         {
             return _context.Users;
+        }
+
+        public IEnumerable<User> GetUsers(Func<User, bool> predicate)
+        {
+            return _context.Users.Where(predicate);
         }
 
         public User GetById(int id)

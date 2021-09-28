@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace LovePursuerAPI.Models
+namespace LovePursuerAPI.Models.Requests
 {
     public class AuthenticateRequest
     {

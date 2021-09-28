@@ -1,7 +1,8 @@
+using System;
 using System.Text.Json.Serialization;
 using LovePursuerAPI.EF.Models;
 
-namespace LovePursuerAPI.Models
+namespace LovePursuerAPI.Models.Responses
 {
     public class AuthenticateResponse
     {
@@ -11,6 +12,8 @@ namespace LovePursuerAPI.Models
 
         public string Email { get; }
         public string Sex { get;  }
+        public string Sexuality { get; }
+        public DateTime BirthDay { get; }
         public Role Role { get; }
         public string JwtToken { get; }
         
@@ -24,6 +27,8 @@ namespace LovePursuerAPI.Models
             LastName = user.LastName;
             Email = user.Email;
             Sex = user.Sex;
+            Sexuality = user.Sexuality;
+            BirthDay = user.BirthDay;
             Role = user.Role;
             JwtToken = jwtToken;
             RefreshToken = refreshToken;
