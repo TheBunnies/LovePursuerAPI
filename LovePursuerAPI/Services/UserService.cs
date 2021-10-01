@@ -23,6 +23,7 @@ namespace LovePursuerAPI.Services
         Task RevokeRefreshTokenAsync(string token, string ipAddress, CancellationToken cancellationToken = default);
         IEnumerable<User> GetAll();
         IEnumerable<User> GetUsers(Func<User, bool> predicate);
+        User GetSingleUser(Func<User, bool> predicate);
         User GetById(int id);
         User GetByEmail(string email);
     }
@@ -71,10 +72,11 @@ namespace LovePursuerAPI.Services
         
         public async Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequest model, string ipAddress, CancellationToken cancellationToken = default)
         {
-            var user = _context.Users.SingleOrDefault(x => x.Email == model.Email);
+            //var user = _context.Users.SingleOrDefault(x => x.Email == model.Email);
+            var user = GetByEmail(model.Email);
 
             // validate
-            if (user == null || !BCryptNet.Verify(model.Password, user.PasswordHash))
+            if (!BCryptNet.Verify(model.Password, user.PasswordHash))
                 throw new AppException("Username or password is incorrect");
 
             // authentication successful so generate jwt and refresh tokens
@@ -147,6 +149,11 @@ namespace LovePursuerAPI.Services
         public IEnumerable<User> GetUsers(Func<User, bool> predicate)
         {
             return _context.Users.Where(predicate);
+        }
+
+        public User GetSingleUser(Func<User, bool> predicate)
+        {
+            return _context.Users.FirstOrDefault(predicate);
         }
 
         public User GetById(int id)
